@@ -17,10 +17,6 @@ export const App = () => {
   const [loading, setLoading] = useState(false);
   const [totalImagesPage, setTotalImagesPage] = useState(null);
 
-  // useEffect(() => {
-  //   console.log('CHANGE');
-  // }, [toSearch, page]);
-
   useEffect(() => {
     if (toSearch === '') {
       return;
@@ -33,7 +29,7 @@ export const App = () => {
         setImagesArray(prevState => [...prevState, ...images.hits]);
         setTotalImagesPage(Math.ceil(images.totalHits / 12));
 
-        if (totalImagesPage === page) {
+        if (Math.ceil(images.totalHits / 12) === page) {
           toast.info(
             "We're sorry, but you've reached the end of search results."
           );
