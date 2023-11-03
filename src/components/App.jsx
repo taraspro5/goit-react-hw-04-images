@@ -1,5 +1,5 @@
 import { fetchImage } from 'api/api';
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { SearchBar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Loader } from './Loader/Loader';
@@ -10,35 +10,31 @@ import { injectStyle } from 'react-toastify/dist/inject-style';
 // CALL IT ONCE IN YOUR APP
 injectStyle();
 
-export class App extends Component {
-  state = {
-    imagesArray: [],
-    toSearch: '',
-    page: 1,
-    loading: false,
-    error: false,
-    totalImagesPage: null,
-  };
+export const App = () => {
+  const [imagesArray, setImagesArray] = useState([]);
+  const [toSearch, setToSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [totalImagesPage, setTotalImagesPage] = useState(null);
 
-  async componentDidUpdate(_, prevState) {
-    if (
-      this.state.toSearch !== prevState.toSearch ||
-      this.state.page !== prevState.page
-    ) {
-      this.setState({
-        loading: true,
-      });
+  // useEffect(() => {
+  //   console.log('CHANGE');
+  // }, [toSearch, page]);
+
+  useEffect(() => {
+    if (toSearch === '') {
+      return;
+    }
+    async function getImages() {
       try {
-        const images = await fetchImage(this.state.toSearch, this.state.page);
+        setLoading(true);
+        const images = await fetchImage(toSearch, page);
 
-        this.setState(prevState => {
-          return {
-            imagesArray: [...prevState.imagesArray, ...images.hits],
-            totalImagesPage: Math.ceil(images.totalHits / 12),
-          };
-        });
+        setImagesArray(prevState => [...prevState, ...images.hits]);
+        setTotalImagesPage(Math.ceil(images.totalHits / 12));
 
-        if (this.state.totalImagesPage === this.state.page) {
+        if (totalImagesPage === page) {
           toast.info(
             "We're sorry, but you've reached the end of search results."
           );
@@ -49,47 +45,40 @@ export class App extends Component {
           toast.info("Sorry, but we couldn't find this images.");
         }
       } catch (error) {
-        this.setState({ error: true });
+        setError(true);
         toast.error('Sorry, we have a problem');
       } finally {
-        this.setState({
-          loading: false,
-        });
+        setLoading(false);
       }
     }
-  }
 
-  onSubmit = value => {
-    if (this.state.toSearch !== value) {
-      this.setState({
-        imagesArray: [],
-        toSearch: value,
-        page: 1,
-      });
+    getImages();
+  }, [toSearch, page]);
+
+  const onSubmit = value => {
+    if (toSearch !== value) {
+      setImagesArray([]);
+      setToSearch(value);
+      setPage(1);
     }
   };
 
-  handlerLoadMore = () => {
-    console.log(this.state.page);
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const handlerLoadMore = () => {
+    console.log(page);
+    setPage(prevState => prevState + 1);
   };
 
-  render() {
-    const { imagesArray, loading, totalImagesPage, page } = this.state;
-    const isBtnLoad = totalImagesPage !== page;
+  const isBtnLoad = totalImagesPage !== page;
 
-    return (
-      <div className="App">
-        <SearchBar onSubmit={this.onSubmit} />
-        {imagesArray.length > 0 && <ImageGallery imagesItems={imagesArray} />}
-        {loading && <Loader />}
-        {imagesArray.length > 0 && isBtnLoad && (
-          <Button handlerLoadMore={this.handlerLoadMore} />
-        )}
-        <ToastContainer autoClose={5000} transition={Flip} />
-      </div>
-    );
-  }
-}
+  return (
+    <div className="App">
+      <SearchBar onSubmit={onSubmit} />
+      {imagesArray.length > 0 && <ImageGallery imagesItems={imagesArray} />}
+      {loading && <Loader />}
+      {imagesArray.length > 0 && isBtnLoad && (
+        <Button handlerLoadMore={handlerLoadMore} />
+      )}
+      <ToastContainer autoClose={5000} transition={Flip} />
+    </div>
+  );
+};
