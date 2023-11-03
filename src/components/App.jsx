@@ -15,7 +15,6 @@ export const App = () => {
   const [toSearch, setToSearch] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
   const [totalImagesPage, setTotalImagesPage] = useState(null);
 
   // useEffect(() => {
@@ -45,7 +44,6 @@ export const App = () => {
           toast.info("Sorry, but we couldn't find this images.");
         }
       } catch (error) {
-        setError(true);
         toast.error('Sorry, we have a problem');
       } finally {
         setLoading(false);
